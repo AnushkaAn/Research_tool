@@ -55,7 +55,7 @@ The following logic was implemented to ensure analyst-grade output:
 
 ### 1. Clone the repository
 ```bash
-git clone [https://github.com/YOUR_USERNAME/research-portal-slice.git](https://github.com/YOUR_USERNAME/research-portal-slice.git)
+git clone [https://github.com/AnushkaAn/Research_tool.git](https://github.com/AnushkaAn/Research_tool.git)
 cd research-portal-slice
 ```
 
