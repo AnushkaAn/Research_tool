@@ -3,3 +3,5 @@ uvicorn
 python-multipart
 PyPDF2
 groq
+python-dotenv
+jinja2
