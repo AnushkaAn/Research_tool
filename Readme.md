@@ -47,8 +47,7 @@ The following logic was implemented to ensure analyst-grade output:
 ---
 
 ## 📸 Sample Output
-![Analysis Result Example](output_screenshot.png) 
-*(Note: Upload your screenshot to the GitHub repo and name it 'output_screenshot.png' for this to appear)*
+![Analysis Result Example](output_screeshot.png) 
 
 ---
 
