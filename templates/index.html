@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Earnings Call Analyzer</title>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #e2e8f0;
+}
+
+/* Main Card */
+.container {
+    width: 800px;
+    max-width: 95%;
+    background: #111827;
+    padding: 40px;
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+/* Heading */
+h2 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #94a3b8;
+    margin-bottom: 25px;
+}
+
+/* Upload Box */
+.upload-box {
+    border: 2px dashed #334155;
+    padding: 30px;
+    text-align: center;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    transition: 0.25s ease;
+}
+
+.upload-box:hover {
+    border-color: #3b82f6;
+    background: #020617;
+}
+
+/* File input hidden */
+input[type="file"] {
+    display: none;
+}
+
+.custom-file-upload {
+    display: inline-block;
+    padding: 12px 20px;
+    cursor: pointer;
+    background: #1f2937;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+.custom-file-upload:hover {
+    background: #374151;
+}
+
+/* Button */
+button {
+    margin-top: 15px;
+    padding: 12px 24px;
+    background: #3b82f6;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 500;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: #2563eb;
+}
+
+button:disabled {
+    background: #475569;
+    cursor: not-allowed;
+}
+
+/* Output section */
+.output {
+    margin-top: 30px;
+}
+
+.output h3 {
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+/* Result Box */
+#result {
+    background: #020617;
+    border: 1px solid #1e293b;
+    padding: 18px;
+    border-radius: 12px;
+    max-height: 350px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+/* Scrollbar */
+#result::-webkit-scrollbar {
+    width: 8px;
+}
+#result::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+}
+
+.status {
+    margin-top: 10px;
+    color: #60a5fa;
+    font-size: 14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>📊 Earnings Call Analyzer</h2>
+    <p class="subtitle">Upload a company earnings transcript PDF and get structured insights.</p>
+
+    <form id="form">
+
+        <div class="upload-box">
+            <label for="file" class="custom-file-upload">
+                Choose PDF File
+            </label>
+            <input type="file" id="file" accept=".pdf" required>
+            <div id="filename" style="margin-top:10px;color:#94a3b8;"></div>
+
+            <button type="submit" id="analyzeBtn">Analyze</button>
+            <div class="status" id="status"></div>
+        </div>
+
+    </form>
+
+    <div class="output">
+        <h3>Output</h3>
+        <pre id="result">Your analysis will appear here...</pre>
+    </div>
+
+</div>
+
+<script>
+
+const form = document.getElementById("form");
+const fileInput = document.getElementById("file");
+const filename = document.getElementById("filename");
+const statusText = document.getElementById("status");
+const resultBox = document.getElementById("result");
+const button = document.getElementById("analyzeBtn");
+
+/* show file name */
+fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+        filename.textContent = "Selected: " + fileInput.files[0].name;
+    }
+});
+
+/* pretty formatter */
+/* Updated formatAnalysis helper */
+function formatAnalysis(data) {
+    if (data.detail) return "❌ " + data.detail;
+    if (data.error) return "❌ " + data.error;
+
+    // Helper to extract text from either a string or an object
+    const listFormatter = (arr) => {
+        if (!Array.isArray(arr) || arr.length === 0) return "Not mentioned";
+        return arr.map(item => {
+            if (typeof item === 'object' && item !== null) {
+                // If it's an object, try to show the point and the quote
+                const point = item.point || item.text || JSON.stringify(item);
+                const quote = item.quote ? ` (Quote: "${item.quote}")` : "";
+                return point + quote;
+            }
+            return item;
+        }).join("\n- ");
+    };
+
+    return `
+MANAGEMENT TONE: ${data.management_tone || "Not mentioned"}
+CONFIDENCE LEVEL: ${data.confidence_level || "Not mentioned"}
+
+KEY POSITIVES:
+- ${listFormatter(data.key_positives)}
+
+KEY CONCERNS:
+- ${listFormatter(data.key_concerns)}
+
+FORWARD GUIDANCE:
+${data.forward_guidance || "Not mentioned"}
+
+CAPACITY UTILIZATION TREND:
+${data.capacity_utilization_trend || "Not mentioned"}
+
+NEW GROWTH INITIATIVES:
+- ${listFormatter(data.new_growth_initiatives)}
+`;
+}
+
+/* submit */
+form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    button.disabled = true;
+    statusText.textContent = "Analyzing transcript...";
+    resultBox.textContent = "";
+
+    try {
+        const res = await fetch("/analyze", {
+            method: "POST",
+            body: formData
+        });
+
+        let data;
+
+        try {
+            data = await res.json();
+        } catch {
+            const text = await res.text();
+            throw new Error(text);
+        }
+
+        resultBox.textContent = formatAnalysis(data);
+        statusText.textContent = "Analysis complete ✓";
+
+    } catch (err) {
+        statusText.textContent = "Server error.";
+        resultBox.textContent = err.message;
+    }
+
+    button.disabled = false;
+};
+
+</script>
+
+
+</body>
+</html>
